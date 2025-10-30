@@ -1,0 +1,212 @@
+import java.util.Objects;
+
+/**
+ * Crie uma classe abstrata Personagem com atributos.
+ */
+public abstract class Personagem {
+    
+    protected String nome;
+    protected int pontosVida;
+    protected int pontosVidaMax; 
+    protected int ataque;
+    protected int defesa;
+    protected int nivel;
+    protected Inventario inventario;
+    
+    // --- NOVOS ATRIBUTOS DE XP ---
+    protected int xp;
+    protected int xpParaProximoNivel;
+
+    /**
+     * Construtor Padrão (requisito).
+     */
+    public Personagem() {
+        this.nome = "Ninguém";
+        this.pontosVidaMax = 10;
+        this.pontosVida = 10;
+        this.ataque = 1;
+        this.defesa = 1;
+        this.nivel = 1;
+        this.inventario = new Inventario();
+        this.xp = 0;
+        this.xpParaProximoNivel = 100; // XP inicial para Nível 2
+    }
+
+    // Construtor principal
+    public Personagem(String nome, int hp, int atk, int def) {
+        this.nome = nome;
+        this.pontosVidaMax = hp;
+        this.pontosVida = hp;
+        this.ataque = atk;
+        this.defesa = def;
+        this.nivel = 1;
+        this.inventario = new Inventario();
+        this.xp = 0;
+        this.xpParaProximoNivel = 100;
+    }
+
+    /**
+     * Construtor de Cópia (requisito).
+     * ATUALIZADO: agora copia os atributos de XP.
+     */
+    public Personagem(Personagem original) {
+        this.nome = original.nome;
+        this.pontosVidaMax = original.pontosVidaMax;
+        this.pontosVida = original.pontosVida;
+        this.ataque = original.ataque;
+        this.defesa = original.defesa;
+        this.nivel = original.nivel;
+        this.inventario = original.inventario.clone(); 
+        this.xp = original.xp;
+        this.xpParaProximoNivel = original.xpParaProximoNivel;
+    }
+
+    // --- MÉTODOS DE XP E NÍVEL ---
+
+    /**
+     * Concede XP ao jogador e verifica se ele subiu de nível.
+     */
+    public void ganharXp(int xpGanhos) {
+        this.xp += xpGanhos;
+        System.out.println(this.nome + " ganhou " + xpGanhos + " de XP! (Total: " + this.xp + "/" + this.xpParaProximoNivel + ")");
+        
+        // Usa 'while' caso o jogador ganhe XP suficiente para vários níveis
+        while (this.xp >= this.xpParaProximoNivel) {
+            subirDeNivel();
+        }
+    }
+
+    /**
+     * Lógica para subir de nível.
+     */
+    private void subirDeNivel() {
+        System.out.println("----------------------------------------");
+        System.out.println("    ¡¡¡ LEVEL UP !!!");
+        System.out.println(this.nome + " alcançou o Nível " + (this.nivel + 1) + "!");
+        
+        int xpExcedente = this.xp - this.xpParaProximoNivel;
+        this.nivel++;
+        this.xp = xpExcedente;
+        // Fórmula simples de scaling: próximo nível custa 50% a mais
+        this.xpParaProximoNivel = (int) (this.xpParaProximoNivel * 1.5);
+
+        // Aplica os bônus de status (cada classe faz de um jeito)
+        aplicarBonusDeNivel();
+        
+        // Cura total ao subir de nível
+        this.pontosVida = this.pontosVidaMax;
+
+        System.out.println("Novos Atributos:");
+        System.out.println(this.toString());
+        System.out.println("XP para o próximo nível: " + this.xpParaProximoNivel);
+        System.out.println("----------------------------------------");
+    }
+
+    /**
+     * Método abstrato. Força as subclasses (Guerreiro, Mago)
+     * a definir como seus status aumentam.
+     */
+    public abstract void aplicarBonusDeNivel();
+
+
+    // --- Métodos de Combate e Ações (Atualizados) ---
+
+    // Calcula o ataque (dado + atributo)
+    public int calcularAtaque(int rolagemDado) {
+        return this.ataque + rolagemDado;
+    }
+
+    public void receberDano(int dano) {
+        int danoRecebido = Math.max(0, dano - this.defesa);
+        this.pontosVida -= danoRecebido;
+        System.out.printf("%s recebeu %d de dano! (HP: %d/%d)\n", 
+            this.nome, danoRecebido, this.pontosVida, this.pontosVidaMax);
+
+        if (!this.estaVivo()) {
+            System.out.printf("%s foi derrotado!\n", this.nome);
+        }
+    }
+    
+    public void curar(int valorCura) {
+        this.pontosVida += valorCura;
+        if (this.pontosVida > this.pontosVidaMax) {
+            this.pontosVida = this.pontosVidaMax;
+        }
+        System.out.printf("%s se curou! (HP: %d/%d)\n", 
+            this.nome, this.pontosVida, this.pontosVidaMax);
+    }
+
+    public boolean estaVivo() {
+        return this.pontosVida > 0;
+    }
+
+    // --- Métodos de Inventário ---
+    
+    public void usarItem(String nomeDoItem) {
+        Item item = this.inventario.encontrarItem(nomeDoItem);
+        if (item != null && item.getQuantidade() > 0) {
+            if (item.getEfeito().equals("cura")) {
+                curar(20); 
+                item.usar(); 
+            } else if (item.getEfeito().equals("cura_grande")) {
+                curar(50); 
+                item.usar();
+            } else if (item.getEfeito().equals("clue")) {
+                System.out.println("\n[INSPECIONAR PISTA]");
+                System.out.println(item.getNome() + ": " + item.getDescricao());
+                System.out.println("Isso não pode ser 'usado', mas é vital para sua jornada.");
+            } else {
+                System.out.println("Não é possível usar '" + item.getNome() + "' agora.");
+            }
+        } else if (item != null && item.getQuantidade() <= 0) {
+            System.out.println("Você não tem mais '" + nomeDoItem + "'.");
+        } else {
+            System.out.println("Você não possui o item '" + nomeDoItem + "'.");
+        }
+    }
+    
+    public void mostrarInventario() {
+        this.inventario.listarItens();
+    }
+    
+    public void pegarLoot(Personagem inimigo) {
+        System.out.println("\nVocê saqueia o " + inimigo.getNome() + "...");
+        Inventario loot = inimigo.getInventario().clone(); // Clona o inventário
+
+        if (loot.getItens().isEmpty()) {
+            System.out.println("...não havia nada de valor.");
+            return;
+        }
+        
+        for (Item itemDoLoot : loot.getItens()) {
+            System.out.println("Você encontrou: " + itemDoLoot.toString());
+            this.inventario.adicionarItem(itemDoLoot);
+        }
+    }
+
+    // --- Métodos Obrigatórios de POO (toString atualizado) ---
+
+    @Override
+    public String toString() {
+        return String.format("[%s] (Nvl %d) HP: %d/%d, ATK: %d, DEF: %d, XP: %d/%d",
+            this.nome, this.nivel, this.pontosVida, this.pontosVidaMax, this.ataque, this.defesa, this.xp, this.xpParaProximoNivel);
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Personagem that = (Personagem) obj;
+        return Objects.equals(nome, that.nome);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(nome);
+    }
+    
+    // Getters
+    public String getNome() { return nome; }
+    public int getDefesa() { return defesa; }
+    public Inventario getInventario() { return inventario; }
+}
