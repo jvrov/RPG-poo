@@ -1,0 +1,11 @@
+João Vitor Roventini 22005168 
+Nota 8
+fiz as classes, inimigos, mapa e historia
+
+Caio Ribeiro Abrahão 23006323
+Nota 7.5
+Ajudei na história, organização de tarefas e refinos
+
+Raphael Moreira ra:19068386
+Nota 9
+fiz grande parte do inventario e os mecanismos de combate

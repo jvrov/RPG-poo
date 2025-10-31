@@ -1,15 +1,11 @@
 import java.util.Objects;
 
-/**
- * Classe Inimigo
- * Derivada de Personagem e funciona como uma "fábrica" de monstros.
- * Cada inimigo é criado via método estático criarInimigo().
- */
+
 public class Inimigo extends Personagem {
 
     private int xpRecompensa;
 
-    // Construtor Padrão (usado como fallback)
+
     private Inimigo() {
         super();
         this.nome = "Rato";
@@ -20,28 +16,26 @@ public class Inimigo extends Personagem {
         this.xpRecompensa = 5;
     }
 
-    // Construtor principal
+
     private Inimigo(String nome, int hp, int atk, int def, int xp) {
         super(nome, hp, atk, def);
         this.xpRecompensa = xp;
     }
 
-    // Construtor de cópia (para save/load)
+
     private Inimigo(Inimigo original) {
         super(original);
         this.xpRecompensa = original.xpRecompensa;
     }
 
-    // ==========================================================
-    // MÉTODO FÁBRICA DE INIMIGOS
-    // ==========================================================
+ 
     public static Inimigo criarInimigo(String nomeDoInimigo) {
         Inimigo inimigo;
 
         switch (nomeDoInimigo) {
 
             // --------------------------------------------------
-            // 🌿 INIMIGOS BÁSICOS DA FLORESTA
+            // INIMIGOS BÁSICOS DA FLORESTA
             // --------------------------------------------------
             case "Slime":
                 inimigo = new Inimigo("Slime", 20, 6, 2, 10);
@@ -69,7 +63,7 @@ public class Inimigo extends Personagem {
                 break;
 
             // --------------------------------------------------
-            // 🪨 INIMIGOS DAS RUÍNAS E CAVERNAS
+            // INIMIGOS DAS RUÍNAS E CAVERNAS
             // --------------------------------------------------
             case "Ogro da Montanha":
                 inimigo = new Inimigo("Ogro da Montanha", 100, 14, 8, 100);
@@ -92,7 +86,7 @@ public class Inimigo extends Personagem {
                 break;
 
             // --------------------------------------------------
-            // 💀 INIMIGOS ESPIRITUAIS / CORROMPIDOS
+            //  INIMIGOS ESPIRITUAIS 
             // --------------------------------------------------
             case "Espectro Errante":
                 inimigo = new Inimigo("Espectro Errante", 45, 13, 3, 40);
@@ -110,7 +104,7 @@ public class Inimigo extends Personagem {
                 break;
 
             // --------------------------------------------------
-            // 🐺 CHEFES INTERMEDIÁRIOS E AVANÇADOS
+            //  CHEFES 
             // --------------------------------------------------
             case "Alfa Lupino":
                 inimigo = new Inimigo("Alfa Lupino", 120, 17, 10, 180);
@@ -124,7 +118,7 @@ public class Inimigo extends Personagem {
                 break;
 
             // --------------------------------------------------
-            // 🐉 CHEFES FINAIS / SECRETOS
+            // CHEFES FINAIS 
             // --------------------------------------------------
             case "Dragão Vermelho Jovem":
                 inimigo = new Inimigo("Dragão Vermelho Jovem", 160, 16, 12, 300);
@@ -142,23 +136,21 @@ public class Inimigo extends Personagem {
                 break;
 
             default:
-                inimigo = new Inimigo(); // Usa o inimigo padrão "Rato"
+                inimigo = new Inimigo(); 
                 break;
         }
 
         return inimigo;
     }
 
-    // ==========================================================
-    // MÉTODOS AUXILIARES
-    // ==========================================================
+   
     public int getXpRecompensa() {
         return this.xpRecompensa;
     }
     
-    // --- NOVO MÉTODO SETTER ---
+   
     /**
-     * Permite que a classe Jogo altere a recompensa de XP (para escalar o chefe secreto).
+     * upa o caos
      */
     public void setXpRecompensa(int xp) {
         this.xpRecompensa = xp;
@@ -166,6 +158,5 @@ public class Inimigo extends Personagem {
 
     @Override
     public void aplicarBonusDeNivel() {
-        // Inimigos não sobem de nível
     }
 }

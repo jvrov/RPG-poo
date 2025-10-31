@@ -1,8 +1,5 @@
 import java.util.Objects;
 
-/**
- * Crie uma classe abstrata Personagem com atributos.
- */
 public abstract class Personagem {
     
     protected String nome;
@@ -16,9 +13,7 @@ public abstract class Personagem {
     protected int xp;
     protected int xpParaProximoNivel;
 
-    /**
-     * Construtor Padrão (requisito).
-     */
+  
     public Personagem() {
         this.nome = "Ninguém";
         this.pontosVidaMax = 10;
@@ -31,7 +26,6 @@ public abstract class Personagem {
         this.xpParaProximoNivel = 100; // XP inicial para Nível 2
     }
 
-    // Construtor principal
     public Personagem(String nome, int hp, int atk, int def) {
         this.nome = nome;
         this.pontosVidaMax = hp;
@@ -44,9 +38,7 @@ public abstract class Personagem {
         this.xpParaProximoNivel = 100;
     }
 
-    /**
-     * Construtor de Cópia (requisito).
-     */
+   
     public Personagem(Personagem original) {
         this.nome = original.nome;
         this.pontosVidaMax = original.pontosVidaMax;
@@ -59,7 +51,6 @@ public abstract class Personagem {
         this.xpParaProximoNivel = original.xpParaProximoNivel;
     }
 
-    // --- MÉTODOS DE XP E NÍVEL ---
 
     public void ganharXp(int xpGanhos) {
         this.xp += xpGanhos;
@@ -92,7 +83,7 @@ public abstract class Personagem {
 
     public abstract void aplicarBonusDeNivel();
 
-    // --- Métodos de Combate e Ações ---
+    
 
     public int calcularAtaque(int rolagemDado) {
         return this.ataque + rolagemDado;
@@ -122,12 +113,7 @@ public abstract class Personagem {
         return this.pontosVida > 0;
     }
 
-    // --- Métodos de Inventário ---
-    
-    /**
-     * --- MÉTODO ATUALIZADO ---
-     * Agora reconhece os novos tipos de item do seu "Bestiário".
-     */
+
     public String usarItem(String nomeDoItem) {
         Item item = this.inventario.encontrarItem(nomeDoItem);
         
@@ -144,14 +130,13 @@ public abstract class Personagem {
         switch (efeito) {
             case "cura":
                 curar(20);
-                item.usar(); // Decrementa a quantidade
+                item.usar(); 
                 return "cura";
             case "cura_grande":
                 curar(50);
-                item.usar(); // Decrementa a quantidade
+                item.usar(); 
                 return "cura_grande";
             
-            // --- Casos não-consumíveis ---
             case "mapa":
                 System.out.println("Você consulta o " + item.getNome() + "...");
                 return "mapa";
@@ -190,8 +175,6 @@ public abstract class Personagem {
         }
     }
 
-    // --- Métodos Obrigatórios de POO ---
-
     @Override
     public String toString() {
         return String.format("[%s] (Nvl %d) HP: %d/%d, ATK: %d, DEF: %d, XP: %d/%d",
@@ -211,7 +194,6 @@ public abstract class Personagem {
         return Objects.hash(nome);
     }
     
-    // Getters
     public String getNome() { return nome; }
     public int getDefesa() { return defesa; }
     public Inventario getInventario() { return inventario; }

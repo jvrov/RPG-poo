@@ -1,9 +1,6 @@
-/**
- * Crie subclasses Guerreiro, Mago e Arqueiro.
- */
 public class Guerreiro extends Personagem {
 
-    // Construtor Padrão
+  
     public Guerreiro() {
         super(); // Chama o construtor padrão do Pai
         this.nome = "Guerreiro Padrão";
@@ -13,19 +10,16 @@ public class Guerreiro extends Personagem {
         this.defesa = 8;
     }
     
-    // Construtor principal
     public Guerreiro(String nome) {
-        // super(nome, hp, atk, def)
-        super(nome, 120, 12, 8);
+        super(nome, 120, 12, 10);
     }
 
-    // Construtor de Cópia
+
     public Guerreiro(Guerreiro original) {
-        super(original); // Chama o construtor de cópia do Pai
+        super(original); 
     }
     @Override
     public void aplicarBonusDeNivel() {
-        // Guerreiro ganha muita vida e defesa
         this.pontosVidaMax += 20;
         this.ataque += 2;
         this.defesa += 2;

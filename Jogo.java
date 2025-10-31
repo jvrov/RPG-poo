@@ -1,9 +1,6 @@
 import java.util.Random;
 import java.util.Scanner;
 
-/**
- * A classe Jogo deve conter o loop principal do RPG.
- */
 public class Jogo {
     
     private static Personagem jogador;
@@ -13,26 +10,12 @@ public class Jogo {
     
     private static boolean jogoAtivo = true; 
     
-    /**
-     * Controla o progresso da história.
-     * 0 = Clareira Inicial
-     * 1 = Trilha das Bestas
-     * 2 = Ruínas Antigas
-     * 3 = Coração da Floresta (Chefe 1)
-     * 4 = Santuário Antigo (Chefe Final)
-     * 5 = Floresta Interminável (Endgame)
-     */
     private static int localizacaoAtual = 0;
     private static String nomeLocalizacao = "Clareira Inicial";
     
     private static int monstrosDerrotadosNaArea = 0;
     
-    // --- NOVA VARIÁVEL DE ESCALA ---
-    /**
-     * Conta quantas vezes o chefe secreto foi derrotado, para escalar sua dificuldade.
-     */
     private static int serCaoticoDerrotas = 0;
-
 
     public static void main(String[] args) {
         iniciarJogo();
@@ -40,9 +23,6 @@ public class Jogo {
         scanner.close();
     }
 
-    /**
-     * Cria o personagem e introduz a história.
-     */
     private static void iniciarJogo() {
         System.out.println("=========================================");
         System.out.println(" REINO DAS BESTAS: O ECO DA FLORESTA PERDIDA ");
@@ -68,7 +48,6 @@ public class Jogo {
             }
         };
         
-        // Adiciona itens iniciais
         jogador.getInventario().adicionarItem(new Item("Poção de Cura", "Cura 20 HP", "cura", 2));
         jogador.getInventario().adicionarItem(new Item("Mapa da Floresta", "Um mapa parcial de Ervaluna.", "mapa", 1)); 
         
@@ -85,13 +64,9 @@ public class Jogo {
         criarSavePoint();
     }
 
-    /**
-     * O loop principal do jogo com as ações do jogador.
-     */
     private static void loopPrincipal() {
         while (jogoAtivo && jogador.estaVivo()) {
             
-            // Atualiza o nome do local
             switch(localizacaoAtual) {
                 case 0: nomeLocalizacao = "Clareira Inicial"; break;
                 case 1: nomeLocalizacao = "Trilha das Bestas"; break;
@@ -135,9 +110,6 @@ public class Jogo {
         }
     }
 
-    /**
-     * Direciona a exploração para o método da localização atual.
-     */
     private static void explorar() {
         switch(localizacaoAtual) {
             case 0:
@@ -161,8 +133,6 @@ public class Jogo {
         }
     }
     
-    // --- MÉTODOS DE EXPLORAÇÃO COM CHEFE DE ANDAR ---
-
     private static void explorarClareira() {
         System.out.println("\nVocê explora a Clareira. As árvores sussurram...");
         
@@ -241,8 +211,7 @@ public class Jogo {
         int rolagem = rolarDado(100);
         Inimigo inimigo = null;
 
-        if (rolagem <= 1) { // 1% de chance do CHEFE SECRETO
-            // --- LÓGICA DE ESCALA E PROVOCAÇÃO ---
+        if (rolagem <= 1) { 
             if (serCaoticoDerrotas > 0) {
                 System.out.println("\n!!! NÃO VAI ME GANHAR DESSA VEZ, " + jogador.getNome().toUpperCase() + " !!!");
             } else {
@@ -251,7 +220,6 @@ public class Jogo {
             System.out.println("O ar se dobra e a realidade se parte. Um Ser Caótico de Ervaluna se materializa!");
             inimigo = Inimigo.criarInimigo("Ser Caótico de Ervaluna");
             
-            // Aplica a escala 1.5x
             if (serCaoticoDerrotas > 0) {
                 double escala = Math.pow(1.5, serCaoticoDerrotas);
                 inimigo.pontosVidaMax = (int) (inimigo.pontosVidaMax * escala);
@@ -262,7 +230,7 @@ public class Jogo {
                 System.out.println("(O Ser Caótico parece " + escala + "x mais forte!)");
             }
         }
-        else if (rolagem <= 4) { // 3% de chance do Dragão
+        else if (rolagem <= 4) { 
             System.out.println("!!! PERIGO !!!");
             System.out.println("Um enorme DRAGÃO VERMELHO JOVEM pousa nas ruínas, rugindo!");
             inimigo = Inimigo.criarInimigo("Dragão Vermelho Jovem");
@@ -283,13 +251,11 @@ public class Jogo {
         }
     }
 
-    // --- MÉTODOS DE HISTÓRIA ---
-
     private static void explorarCoracaoDaFloresta() {
         System.out.println("\nO Coração da Floresta pulsa com uma energia estranha e sombria.");
         
         int rolagem = rolarDado(100);
-        if (rolagem <= 6) { // 6% de chance de Dragão
+        if (rolagem <= 6) { 
             System.out.println("!!! PERIGO !!!");
             System.out.println("Atraído pela energia, um DRAGÃO VERMELHO JOVEM desce dos céus!");
             Inimigo dragao = Inimigo.criarInimigo("Dragão Vermelho Jovem");
@@ -310,7 +276,7 @@ public class Jogo {
         System.out.println("\nVocê usa o amuleto para abrir caminho até o Santuário Antigo.");
         
         int rolagem = rolarDado(100);
-        if (rolagem <= 6) { // 6% de chance de Dragão
+        if (rolagem <= 6) { 
             System.out.println("!!! PERIGO !!!");
             System.out.println("Um DRAGÃO VERMELHO JOVEM está guardando a entrada do santuário!");
             Inimigo dragao = Inimigo.criarInimigo("Dragão Vermelho Jovem");
@@ -337,15 +303,12 @@ public class Jogo {
         batalhar(finalBoss);
     }
     
-    // --- NOVO MÉTODO: O ENDGAME INFINITO ---
-    
     private static void explorarFlorestaInterminavel() {
         System.out.println("\nVocê se aventura de volta pela Floresta Interminável, agora mais perigosa...");
         int rolagem = rolarDado(100);
         Inimigo inimigo = null;
         
-        if (rolagem <= 1) { // 1% de chance do CHEFE SECRETO
-            // --- LÓGICA DE ESCALA E PROVOCAÇÃO ---
+        if (rolagem <= 1) { 
             if (serCaoticoDerrotas > 0) {
                 System.out.println("\n!!! NÃO VAI ME GANHAR DESSA VEZ, " + jogador.getNome().toUpperCase() + " !!!");
             } else {
@@ -355,7 +318,6 @@ public class Jogo {
             
             inimigo = Inimigo.criarInimigo("Ser Caótico de Ervaluna");
             
-            // Aplica a escala 1.5x
             if (serCaoticoDerrotas > 0) {
                 double escala = Math.pow(1.5, serCaoticoDerrotas);
                 inimigo.pontosVidaMax = (int) (inimigo.pontosVidaMax * escala);
@@ -366,7 +328,7 @@ public class Jogo {
                 System.out.println("(O Ser Caótico parece " + String.format("%.1f", escala) + "x mais forte!)");
             }
         }
-        else if (rolagem <= 7) { // 6% de chance do Dragão (1 + 6 = 7)
+        else if (rolagem <= 7) { 
             System.out.println("!!! PERIGO !!!");
             System.out.println("Um enorme DRAGÃO VERMELHO JOVEM te caça!");
             inimigo = Inimigo.criarInimigo("Dragão Vermelho Jovem");
@@ -396,16 +358,10 @@ public class Jogo {
         }
     }
     
-    /**
-     * O método de batalha
-     * --- MÉTODO ATUALIZADO ---
-     * Remove o "Fim Verdadeiro" e incrementa o contador.
-     */
     private static void batalhar(Inimigo inimigo) {
         System.out.println("--- BATALHA INICIADA: " + jogador.getNome() + " vs " + inimigo.getNome() + " ---");
         
         while (jogador.estaVivo() && inimigo.estaVivo() && jogoAtivo) { 
-            // Turno do Jogador
             System.out.println(jogador.toString());
             System.out.println(inimigo.toString());
             System.out.println("\nTurno do Jogador: [1] Atacar [2] Usar Item [3] Tentar Fugir");
@@ -430,7 +386,7 @@ public class Jogo {
                 turnoInimigo = false; 
                 
             } else if (acao.equals("3")) {
-                if(inimigo.getXpRecompensa() >= 120) { // 120+ XP = Chefe/Mini-Chefe
+                if(inimigo.getXpRecompensa() >= 120) { 
                     System.out.println("Não há como fugir de um inimigo tão poderoso!");
                 } else {
                     int rolagemFuga = rolarDado(10); 
@@ -446,7 +402,6 @@ public class Jogo {
                 System.out.println("Ação inválida, você perdeu o turno.");
             }
             
-            // Turno do Inimigo
             if (inimigo.estaVivo() && turnoInimigo) {
                 System.out.println("Turno do " + inimigo.getNome() + "...");
                 int rolagem = rolarDado(20); 
@@ -461,7 +416,6 @@ public class Jogo {
             }
         }
         
-        // Fim da batalha
         if (jogador.estaVivo() && !inimigo.estaVivo()) {
             System.out.println("Você venceu a batalha!");
             
@@ -471,7 +425,6 @@ public class Jogo {
 
             jogador.pegarLoot(inimigo);
             
-            // --- LÓGICA DE PROGRESSÃO DA HISTÓRIA ---
             if (inimigo.getNome().equals("Goblin Faminto") && localizacaoAtual == 0) {
                 System.out.println("\n[HISTÓRIA] Ao saquear o Goblin, você encontra um pedaço de tecido com o brasão do seu grupo!");
                 System.out.println("[HISTÓRIA] Você agora vê uma trilha de pegadas que antes estava escondida!");
@@ -497,7 +450,6 @@ public class Jogo {
                 monstrosDerrotadosNaArea = 0;
             }
             
-            // --- FIM DO JOGO (NORMAL) ---
             if (inimigo.getNome().equals("A Besta Manticora")) {
                 System.out.println("\n\n--- FIM DA HISTÓRIA PRINCIPAL ---");
                 System.out.println("Com a Manticora morta, um silêncio cai sobre Ervaluna.");
@@ -511,18 +463,17 @@ public class Jogo {
                 
                 if (escolhaFinal.equals("1")) {
                     System.out.println("...Obrigado por jogar...");
-                    jogoAtivo = false; // Termina o jogo
+                    jogoAtivo = false; 
                 } else {
                     System.out.println("\nA floresta ainda te chama... A exploração agora é infinita.");
-                    localizacaoAtual = 5; // Move para o "Andar Infinito"
+                    localizacaoAtual = 5; 
                     monstrosDerrotadosNaArea = 0;
                 }
 
             } 
-            // --- CHEFE SECRETO (NÃO TERMINA O JOGO) ---
             else if (inimigo.getNome().equals("Ser Caótico de Ervaluna")) {
                 System.out.println("\n[VITÓRIA ÉPICA] Você baniu o Ser Caótico... por enquanto.");
-                serCaoticoDerrotas++; // Incrementa o contador para a próxima vez
+                serCaoticoDerrotas++; 
             }
             
             if(jogoAtivo) {
@@ -570,8 +521,6 @@ public class Jogo {
         }
     }
     
-    // --- Lógica de Save/Load com Construtor de Cópia ---
-    
     private static void criarSavePoint() {
         if (jogador instanceof Guerreiro g) {
             savePoint = new Guerreiro(g);
@@ -603,54 +552,46 @@ public class Jogo {
         }
     }
     
-    // Rola um dado com o número de lados especificado
     private static int rolarDado(int lados) {
         return dado.nextInt(lados) + 1;
     }
     
     
-    // --- MÉTODO DO MAPA ---
-    
-    /**
-     * Mostra o mini-mapa ASCII que você criou, de forma dinâmica.
-     * @param localizacao O ID da localização atual (0-5)
-     */
     private static void mostrarMiniMapa(int localizacao) {
-        // Define as marcações do mapa
         String loc0, loc1, loc2, loc3, loc4;
-        loc0 = loc1 = loc2 = loc3 = loc4 = "[?]"; // Padrão 'Oculto'
+        loc0 = loc1 = loc2 = loc3 = loc4 = "[?]"; 
 
         switch (localizacao) {
-            case 0: // Acloreira
+            case 0: 
                 loc0 = "[P]";
                 loc1 = "[ ]"; 
                 break;
-            case 1: // Trilha
+            case 1: 
                 loc0 = "[X]";
                 loc1 = "[P]";
                 loc2 = "[ ]"; 
                 break;
-            case 2: // Ruinas
+            case 2: 
                 loc0 = "[X]";
                 loc1 = "[X]";
                 loc2 = "[P]";
                 loc3 = "[ ]"; 
                 break;
-            case 3: // Coracao
+            case 3: 
                 loc0 = "[X]";
                 loc1 = "[X]";
                 loc2 = "[X]";
                 loc3 = "[P]";
                 loc4 = "[ ]"; 
                 break;
-            case 4: // Santuario
+            case 4: 
                 loc0 = "[X]";
                 loc1 = "[X]";
                 loc2 = "[X]";
                 loc3 = "[X]";
                 loc4 = "[P]";
                 break;
-            case 5: // Floresta Interminável
+            case 5: 
                 loc0 = "[X]";
                 loc1 = "[X]";
                 loc2 = "[X]";
@@ -659,12 +600,12 @@ public class Jogo {
                 break;
         }
 
- 
+
         System.out.println("\n==================== MAPA DA FLORESTA DE ERVALUNA ====================");
 
         System.out.println("^^^^^^^^^^^^^^^^^^^^ MONTANHAS DO NORTE (INACESSÍVEIS) ^^^^^^^^^^^^^^^^^^^");
 
-        System.out.println("T T & ^ ^ ^ ^           ^ ^ ^ ^ ^           ^ ^ & T T & ^T T T T T T");
+        System.out.println("T T & ^ ^ ^ ^           ^ ^ ^ ^           ^ ^ & T T & ^T T T T T T");
 
         System.out.println("   & T ^         ^     " + loc4 + "  Santuário Antigo (Chefe Final)^ & T");
 

@@ -1,9 +1,7 @@
-/**
- * Crie subclasses Guerreiro, Mago e Arqueiro.
- */
+
 public class Arqueiro extends Personagem {
 
-    // Construtor Padrão
+
     public Arqueiro() {
         super();
         this.nome = "Arqueiro Padrão";
@@ -13,19 +11,17 @@ public class Arqueiro extends Personagem {
         this.defesa = 6;
     }
     
-    // Construtor principal
     public Arqueiro(String nome) {
-        // super(nome, hp, atk, def)
-        super(nome, 100, 14, 6);
+        super(nome, 100, 24, 6);
     }
 
-    // Construtor de Cópia
+    // Ccopia
     public Arqueiro(Arqueiro original) {
         super(original);
     }
     @Override
     public void aplicarBonusDeNivel() {
-        // Arqueiro é balanceado, focado em ataque
+        // up
         this.pontosVidaMax += 15;
         this.ataque += 3;
         this.defesa += 1;

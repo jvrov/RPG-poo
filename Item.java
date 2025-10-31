@@ -1,15 +1,10 @@
 import java.util.Objects;
 
-/**
- * Representa um item no inventário.
- * Implementa Comparable para ser ordenado (requisito).
- * Implementa Cloneable para ser copiado (requisito).
- */
 public class Item implements Comparable<Item>, Cloneable {
     private String nome;
     private String descricao;
-    private String efeito; // ex.: cura, aumento de ataque, etc.
-    private int quantidade; // número de unidades disponíveis
+    private String efeito; 
+    private int quantidade; 
 
     // Construtor Padrão
     public Item() {
@@ -26,7 +21,6 @@ public class Item implements Comparable<Item>, Cloneable {
         this.quantidade = quantidade;
     }
 
-    // --- Getters e Setters (para quantidade) ---
     public String getNome() { return nome; }
     public String getDescricao() { return descricao; }
     public String getEfeito() { return efeito; }
@@ -38,46 +32,34 @@ public class Item implements Comparable<Item>, Cloneable {
 
     public void usar() {
         if (this.quantidade > 0) {
-            this.quantidade--; // Sempre que um item for usado, sua quantidade é decrementada.
+            this.quantidade--; 
             System.out.println("Você usou 1 " + this.nome + ". Restam: " + this.quantidade);
         } else {
             System.out.println("Você não tem mais " + this.nome + " para usar.");
         }
     }
 
-    // --- Métodos Obrigatórios de POO ---
-
-    /**
-     * Compara itens pelo nome para ordenação.
-     */
     @Override
     public int compareTo(Item outroItem) {
         return this.nome.compareTo(outroItem.getNome());
     }
 
-    /**
-     * Usado para verificar se um item já existe no inventário.
-     * Dois itens são "iguais" se tiverem o mesmo nome.
-     */
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Item item = (Item) obj;
-        return Objects.equals(nome, item.nome); // Apenas o nome importa para empilhar
+        return Objects.equals(nome, item.nome); 
     }
 
-    /**
-     * Necessário quando sobrescrevemos equals().
-     */
+   
     @Override
     public int hashCode() {
         return Objects.hash(nome);
     }
 
-    /**
-     * Cria uma cópia independente do item (para loot).
-     */
+    
     @Override
     public Item clone() {
         try {
