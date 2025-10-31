@@ -11,19 +11,28 @@ public class Jogo {
     private static final Random dado = new Random(); 
     private static Personagem savePoint; 
     
-    // --- MUDANÇAS DE HISTÓRIA E CONTROLE ---
-    private static boolean jogoAtivo = true; // Controla o fim do jogo
+    private static boolean jogoAtivo = true; 
     
     /**
      * Controla o progresso da história.
-     * 0 = Acloreira
+     * 0 = Clareira Inicial
      * 1 = Trilha das Bestas
      * 2 = Ruínas Antigas
      * 3 = Coração da Floresta (Chefe 1)
      * 4 = Santuário Antigo (Chefe Final)
+     * 5 = Floresta Interminável (Endgame)
      */
     private static int localizacaoAtual = 0;
-    private static String nomeLocalizacao = "Acloreira";
+    private static String nomeLocalizacao = "Clareira Inicial";
+    
+    private static int monstrosDerrotadosNaArea = 0;
+    
+    // --- NOVA VARIÁVEL DE ESCALA ---
+    /**
+     * Conta quantas vezes o chefe secreto foi derrotado, para escalar sua dificuldade.
+     */
+    private static int serCaoticoDerrotas = 0;
+
 
     public static void main(String[] args) {
         iniciarJogo();
@@ -59,7 +68,10 @@ public class Jogo {
             }
         };
         
+        // Adiciona itens iniciais
         jogador.getInventario().adicionarItem(new Item("Poção de Cura", "Cura 20 HP", "cura", 2));
+        jogador.getInventario().adicionarItem(new Item("Mapa da Floresta", "Um mapa parcial de Ervaluna.", "mapa", 1)); 
+        
         System.out.println("\nPersonagem criado!");
         System.out.println(jogador.toString());
         
@@ -77,24 +89,23 @@ public class Jogo {
      * O loop principal do jogo com as ações do jogador.
      */
     private static void loopPrincipal() {
-        // ATUALIZADO: usa 'jogoAtivo'
         while (jogoAtivo && jogador.estaVivo()) {
             
             // Atualiza o nome do local
             switch(localizacaoAtual) {
-                case 0: nomeLocalizacao = "Acloreira"; break;
+                case 0: nomeLocalizacao = "Clareira Inicial"; break;
                 case 1: nomeLocalizacao = "Trilha das Bestas"; break;
                 case 2: nomeLocalizacao = "Ruínas Antigas"; break;
                 case 3: nomeLocalizacao = "Coração da Floresta"; break;
-                case 4: nomeLocalizacao = "Santuário Antigo"; break; // NOVO LOCAL
+                case 4: nomeLocalizacao = "Santuário Antigo"; break; 
+                case 5: nomeLocalizacao = "Floresta Interminável"; break; 
             }
             
             System.out.println("\n--- O QUE VOCÊ FAZ? (Local: " + nomeLocalizacao + ") ---");
             System.out.println("[1] Explorar/Avançar"); 
             System.out.println("[2] Usar item do inventário"); 
             System.out.println("[3] Ver status do personagem");
-            System.out.println("[4] Carregar último save point");
-            System.out.println("[5] Sair do Jogo");
+            System.out.println("[4] Sair do Jogo");
             System.out.print("Sua escolha: ");
             
             String escolha = scanner.nextLine();
@@ -107,15 +118,11 @@ public class Jogo {
                     usarItem();
                     break;
                 case "3":
-                    System.out.println(jogador.toString());
-                    jogador.mostrarInventario();
+                    System.out.println(jogador.toString()); 
                     break;
-                case "4":
-                    carregarSavePoint();
-                    break;
-                case "5":
+                case "4": 
                     System.out.println("Obrigado por jogar!");
-                    jogoAtivo = false; // ATUALIZADO
+                    jogoAtivo = false; 
                     break;
                 default:
                     System.out.println("Comando inválido.");
@@ -134,7 +141,7 @@ public class Jogo {
     private static void explorar() {
         switch(localizacaoAtual) {
             case 0:
-                explorarAcloreira();
+                explorarClareira();
                 break;
             case 1:
                 explorarTrilha();
@@ -143,34 +150,44 @@ public class Jogo {
                 explorarRuinas();
                 break;
             case 3:
-                explorarCoracaoDaFloresta(); // NOVO
+                explorarCoracaoDaFloresta(); 
                 break;
             case 4:
-                explorarSantuario(); // NOVO
+                explorarSantuario(); 
+                break;
+            case 5:
+                explorarFlorestaInterminavel(); 
                 break;
         }
     }
     
-    // --- MÉTODOS DE EXPLORAÇÃO ATUALIZADOS COM XP ---
+    // --- MÉTODOS DE EXPLORAÇÃO COM CHEFE DE ANDAR ---
 
-    private static void explorarAcloreira() {
-        System.out.println("\nVocê explora a Acloreira. As árvores sussurram...");
+    private static void explorarClareira() {
+        System.out.println("\nVocê explora a Clareira. As árvores sussurram...");
+        
+        if (monstrosDerrotadosNaArea >= 2) {
+            System.out.println("Você encontra um rastro! Um Goblin Faminto está guardando uma passagem estreita!");
+            Inimigo chefe = Inimigo.criarInimigo("Goblin Faminto");
+            batalhar(chefe);
+            return; 
+        }
+        
         int rolagem = rolarDado(100);
         Inimigo inimigo = null;
 
-        if (rolagem <= 20) {
+        if (rolagem <= 30) {
             System.out.println("Você pisa em uma placa de pressão... uma armadilha!");
             jogador.receberDano(10);
-        } else if (rolagem <= 50) {
+        } else if (rolagem <= 60) {
             System.out.println("Um Slime verde-ácido desliza em sua direção!");
-            inimigo = new Inimigo("Slime", 20, 6, 2, 10); // XP Adicionado
-        } else if (rolagem <= 80) {
+            inimigo = Inimigo.criarInimigo("Slime"); 
+        } else if (rolagem <= 90) {
+             System.out.println("Um Cogumelo Venenoso Vivo balança, soltando esporos!");
+             inimigo = Inimigo.criarInimigo("Cogumelo Venenoso Vivo");
+        } else {
              System.out.println("Você encontra um baú de madeira antigo!");
              jogador.getInventario().adicionarItem(new Item("Poção de Cura", "Cura 20 HP", "cura", 1));
-        } else {
-            System.out.println("Um Goblin Faminto, com olhos vermelhos, salta das sombras!");
-            inimigo = new Inimigo("Goblin Faminto", 40, 9, 5, 25); // XP Adicionado
-            inimigo.getInventario().adicionarItem(new Item("Pedaço de Tecido", "Tem o brasão do seu grupo de mercenários!", "clue", 1));
         }
 
         if (inimigo != null) {
@@ -180,20 +197,29 @@ public class Jogo {
     
     private static void explorarTrilha() {
         System.out.println("\nVocê segue a trilha de pegadas. As sombras parecem se mover...");
+        
+        if (monstrosDerrotadosNaArea >= 3) {
+            System.out.println("Você chega a uma caverna fétida. Um Troll da Caverna rosna, protegendo seu tesouro!");
+            Inimigo chefe = Inimigo.criarInimigo("Troll da Caverna");
+            batalhar(chefe);
+            return;
+        }
+
         int rolagem = rolarDado(100);
         Inimigo inimigo = null;
 
-        if (rolagem <= 30) {
+        if (rolagem <= 20) {
             System.out.println("Você encontra uma mochila abandonada. Parece que foi rasgada por garras.");
             jogador.getInventario().adicionarItem(new Item("Poção de Cura", "Cura 20 HP", "cura", 2));
+        } else if (rolagem <= 45) {
+            System.out.println("Uma matilha de Lobos das Sombras te cerca!");
+            inimigo = Inimigo.criarInimigo("Lobo das Sombras");
         } else if (rolagem <= 70) {
-            System.out.println("O chão treme! Um Ogro da Montanha bloqueia seu caminho!");
-            inimigo = new Inimigo("Ogro da Montanha", 100, 14, 8, 100); // XP Adicionado
-            inimigo.getInventario().adicionarItem(new Item("Clava de Ogro", "Um porrete gigante", "lixo", 1));
+            System.out.println("Uma enorme Serpente de Ervaluna desce de uma árvore!");
+            inimigo = Inimigo.criarInimigo("Serpente de Ervaluna");
         } else {
-            System.out.println("Um Troll da Caverna faminto, com pele verde e grossa, te fareja!");
-            inimigo = new Inimigo("Troll da Caverna", 80, 12, 6, 75); // XP Adicionado
-            inimigo.getInventario().adicionarItem(new Item("Fivela de Cinto", "É a fivela do Capitão do seu grupo! Ele esteve aqui.", "clue", 1));
+            System.out.println("O chão treme! Um Ogro da Montanha bloqueia seu caminho!");
+            inimigo = Inimigo.criarInimigo("Ogro da Montanha"); 
         }
         
         if (inimigo != null) {
@@ -203,35 +229,53 @@ public class Jogo {
     
     private static void explorarRuinas() {
         System.out.println("\nA trilha termina em ruínas antigas, engolidas pela mata.");
+
+        if (monstrosDerrotadosNaArea >= 3) {
+            System.out.println("Você chega ao centro das ruínas. Um Guardião de Pedra se levanta!");
+            System.out.println("Seus olhos de runa brilham, bloqueando a passagem adiante.");
+            Inimigo chefe = Inimigo.criarInimigo("Guardião de Pedra");
+            batalhar(chefe);
+            return;
+        }
+        
         int rolagem = rolarDado(100);
         Inimigo inimigo = null;
 
-        if (rolagem <= 3) { 
+        if (rolagem <= 1) { // 1% de chance do CHEFE SECRETO
+            // --- LÓGICA DE ESCALA E PROVOCAÇÃO ---
+            if (serCaoticoDerrotas > 0) {
+                System.out.println("\n!!! NÃO VAI ME GANHAR DESSA VEZ, " + jogador.getNome().toUpperCase() + " !!!");
+            } else {
+                System.out.println("\n!!! UMA PRESENÇA ATERRORIZANTE !!!");
+            }
+            System.out.println("O ar se dobra e a realidade se parte. Um Ser Caótico de Ervaluna se materializa!");
+            inimigo = Inimigo.criarInimigo("Ser Caótico de Ervaluna");
+            
+            // Aplica a escala 1.5x
+            if (serCaoticoDerrotas > 0) {
+                double escala = Math.pow(1.5, serCaoticoDerrotas);
+                inimigo.pontosVidaMax = (int) (inimigo.pontosVidaMax * escala);
+                inimigo.pontosVida = inimigo.pontosVidaMax;
+                inimigo.ataque = (int) (inimigo.ataque * escala);
+                inimigo.defesa = (int) (inimigo.defesa * escala);
+                inimigo.setXpRecompensa((int) (inimigo.getXpRecompensa() * escala));
+                System.out.println("(O Ser Caótico parece " + escala + "x mais forte!)");
+            }
+        }
+        else if (rolagem <= 4) { // 3% de chance do Dragão
             System.out.println("!!! PERIGO !!!");
             System.out.println("Um enorme DRAGÃO VERMELHO JOVEM pousa nas ruínas, rugindo!");
-            inimigo = new Inimigo("Dragão Vermelho Jovem", 160, 16, 12, 300); // XP Adicionado
-            inimigo.getInventario().adicionarItem(new Item("Poção de Cura Grande", "Cura 50 HP", "cura_grande", 1));
-            inimigo.getInventario().adicionarItem(new Item("Escama de Dragão", "Material raro de forja", "material", 1));
+            inimigo = Inimigo.criarInimigo("Dragão Vermelho Jovem");
         
-        } else if (rolagem <= 50) {
-            System.out.println("Um Ogro da Montanha está guardando um totem antigo!");
-            inimigo = new Inimigo("Ogro da Montanha", 100, 14, 8, 100); // XP Adicionado
-            inimigo.getInventario().adicionarItem(new Item("Poção de Cura", "Cura 20 HP", "cura", 1));
-
+        } else if (rolagem <= 30) {
+            System.out.println("Um Espectro Errante atravessa uma parede e flutua em sua direção!");
+            inimigo = Inimigo.criarInimigo("Espectro Errante");
+        } else if (rolagem <= 60) {
+            System.out.println("Um Besouro Blindado emerge dos escombros!");
+            inimigo = Inimigo.criarInimigo("Besouro Blindado");
         } else {
-            System.out.println("Um espírito da floresta aparece. Ele oferece ajuda...");
-            System.out.println("'Em troca de uma poção de cura, eu o guiarei ao Coração da Floresta.'");
-            System.out.println("Você aceita? [1] Sim [2] Não");
-            
-            Item pocao = jogador.getInventario().encontrarItem("Poção de Cura");
-            
-            if (scanner.nextLine().equals("1") && pocao != null && pocao.getQuantidade() > 0) {
-                System.out.println("Você entrega a poção. O espírito aponta para uma passagem secreta.");
-                jogador.getInventario().removerItem(pocao, 1);
-                localizacaoAtual = 3; // Avança para o Coração
-            } else {
-                System.out.println("Você recusa ou não tem a poção. O espírito desaparece.");
-            }
+            System.out.println("Um Olho do Bosque flutua silenciosamente, te observando...");
+            inimigo = Inimigo.criarInimigo("Olho do Bosque");
         }
         
         if (inimigo != null) {
@@ -239,41 +283,123 @@ public class Jogo {
         }
     }
 
-    // --- NOVOS MÉTODOS DE HISTÓRIA ---
+    // --- MÉTODOS DE HISTÓRIA ---
 
-    /**
-     * Eventos do Local 3: Coração da Floresta (Chefe 1)
-     */
     private static void explorarCoracaoDaFloresta() {
         System.out.println("\nO Coração da Floresta pulsa com uma energia estranha e sombria.");
-        System.out.println("As árvores se abrem para revelar uma clareira.");
+        
+        int rolagem = rolarDado(100);
+        if (rolagem <= 6) { // 6% de chance de Dragão
+            System.out.println("!!! PERIGO !!!");
+            System.out.println("Atraído pela energia, um DRAGÃO VERMELHO JOVEM desce dos céus!");
+            Inimigo dragao = Inimigo.criarInimigo("Dragão Vermelho Jovem");
+            batalhar(dragao);
+            if (!jogador.estaVivo()) return; 
+        }
+        
+        System.out.println("As árvores se abrem para revelar o centro da clareira.");
         System.out.println("Você vê uma figura encapuzada... não é um monstro. É ELARA, a rastreadora do seu grupo!");
         System.out.println("'...corra...', ela sussurra, antes de seus olhos ficarem brancos.");
         System.out.println("Atrás dela, uma criatura feita de vinhas e sombras se ergue... O 'Espirito da Floresta'.");
         
-        Inimigo chefe1 = new Inimigo("Espírito Corrompido da Floresta", 200, 18, 10, 500);
-        chefe1.getInventario().adicionarItem(new Item("Amuleto de Ervaluna", "Um amuleto que Elara carregava. Pulsa fracamente.", "clue", 1));
-        
+        Inimigo chefe1 = Inimigo.criarInimigo("Espírito Corrompido da Floresta");
         batalhar(chefe1);
     }
     
-    /**
-     * Eventos do Local 4: Santuário Antigo (Chefe Final)
-     */
     private static void explorarSantuario() {
         System.out.println("\nVocê usa o amuleto para abrir caminho até o Santuário Antigo.");
-        System.out.println("É um lugar de silêncio mortal. No centro, você vê os corpos dos seus companheiros mercenários.");
+        
+        int rolagem = rolarDado(100);
+        if (rolagem <= 6) { // 6% de chance de Dragão
+            System.out.println("!!! PERIGO !!!");
+            System.out.println("Um DRAGÃO VERMELHO JOVEM está guardando a entrada do santuário!");
+            Inimigo dragao = Inimigo.criarInimigo("Dragão Vermelho Jovem");
+            batalhar(dragao);
+            if (!jogador.estaVivo()) return;
+        } else if (rolagem <= 30) {
+             System.out.println("Um poderoso Alfa Lupino protege o covil de seu mestre!");
+             Inimigo miniChefe = Inimigo.criarInimigo("Alfa Lupino");
+             batalhar(miniChefe);
+             if (!jogador.estaVivo()) return;
+        } else if (rolagem <= 50) {
+            System.out.println("Uma Fênix Crepuscular renasce das cinzas de um antigo ritual!");
+            Inimigo miniChefe = Inimigo.criarInimigo("Fênix Crepuscular");
+            batalhar(miniChefe);
+            if (!jogador.estaVivo()) return;
+        }
+
+        System.out.println("Você avança... É um lugar de silêncio mortal. No centro, você vê os corpos dos seus companheiros mercenários.");
         System.out.println("Sobre eles, se alimentando da energia da tempestade... a criatura que os caçou.");
         System.out.println("Uma Besta Manticora, com relâmpagos verdes crepitando em suas asas.");
         System.out.println("'TOLO', ruge a besta. 'A floresta os marcou. Agora, ela marcará você!'");
 
-        Inimigo finalBoss = new Inimigo("A Besta Manticora", 350, 20, 14, 1000);
+        Inimigo finalBoss = Inimigo.criarInimigo("A Besta Manticora");
         batalhar(finalBoss);
     }
     
+    // --- NOVO MÉTODO: O ENDGAME INFINITO ---
+    
+    private static void explorarFlorestaInterminavel() {
+        System.out.println("\nVocê se aventura de volta pela Floresta Interminável, agora mais perigosa...");
+        int rolagem = rolarDado(100);
+        Inimigo inimigo = null;
+        
+        if (rolagem <= 1) { // 1% de chance do CHEFE SECRETO
+            // --- LÓGICA DE ESCALA E PROVOCAÇÃO ---
+            if (serCaoticoDerrotas > 0) {
+                System.out.println("\n!!! NÃO VAI ME GANHAR DESSA VEZ, " + jogador.getNome().toUpperCase() + " !!!");
+            } else {
+                System.out.println("\n!!! UMA PRESENÇA ATERRORIZANTE !!!");
+            }
+            System.out.println("O ar se dobra e a realidade se parte. Um Ser Caótico de Ervaluna se materializa!");
+            
+            inimigo = Inimigo.criarInimigo("Ser Caótico de Ervaluna");
+            
+            // Aplica a escala 1.5x
+            if (serCaoticoDerrotas > 0) {
+                double escala = Math.pow(1.5, serCaoticoDerrotas);
+                inimigo.pontosVidaMax = (int) (inimigo.pontosVidaMax * escala);
+                inimigo.pontosVida = inimigo.pontosVidaMax;
+                inimigo.ataque = (int) (inimigo.ataque * escala);
+                inimigo.defesa = (int) (inimigo.defesa * escala);
+                inimigo.setXpRecompensa((int) (inimigo.getXpRecompensa() * escala));
+                System.out.println("(O Ser Caótico parece " + String.format("%.1f", escala) + "x mais forte!)");
+            }
+        }
+        else if (rolagem <= 7) { // 6% de chance do Dragão (1 + 6 = 7)
+            System.out.println("!!! PERIGO !!!");
+            System.out.println("Um enorme DRAGÃO VERMELHO JOVEM te caça!");
+            inimigo = Inimigo.criarInimigo("Dragão Vermelho Jovem");
+        
+        } else if (rolagem <= 20) {
+            System.out.println("Uma Fênix Crepuscular renasce das cinzas de um antigo ritual!");
+            inimigo = Inimigo.criarInimigo("Fênix Crepuscular");
+        } else if (rolagem <= 35) {
+            System.out.println("Um poderoso Alfa Lupino te vê como uma ameaça ao seu território!");
+            inimigo = Inimigo.criarInimigo("Alfa Lupino");
+        } else if (rolagem <= 50) {
+            System.out.println("Um Guardião de Pedra se reergue das ruínas!");
+            inimigo = Inimigo.criarInimigo("Guardião de Pedra");
+        } else if (rolagem <= 65) {
+            System.out.println("Um Ogro da Montanha furioso ataca!");
+            inimigo = Inimigo.criarInimigo("Ogro da Montanha");
+        } else if (rolagem <= 80) {
+            System.out.println("Um Espectro Errante te embosca, com ódio nos olhos!");
+            inimigo = Inimigo.criarInimigo("Espectro Errante");
+        } else {
+            System.out.println("Uma Serpente de Ervaluna gigante desce de uma árvore!");
+            inimigo = Inimigo.criarInimigo("Serpente de Ervaluna");
+        }
+        
+        if (inimigo != null) {
+            batalhar(inimigo);
+        }
+    }
+    
     /**
-     * O método de batalha pedido no trabalho.
-     * ATUALIZADO: Concede XP e checa a progressão da história.
+     * O método de batalha
+     * --- MÉTODO ATUALIZADO ---
+     * Remove o "Fim Verdadeiro" e incrementa o contador.
      */
     private static void batalhar(Inimigo inimigo) {
         System.out.println("--- BATALHA INICIADA: " + jogador.getNome() + " vs " + inimigo.getNome() + " ---");
@@ -304,13 +430,17 @@ public class Jogo {
                 turnoInimigo = false; 
                 
             } else if (acao.equals("3")) {
-                int rolagemFuga = rolarDado(10); 
-                System.out.println("Você rolou " + rolagemFuga + " para fugir...");
-                if (rolagemFuga > 5) { 
-                    System.out.println("Você conseguiu fugir!");
-                    break; 
+                if(inimigo.getXpRecompensa() >= 120) { // 120+ XP = Chefe/Mini-Chefe
+                    System.out.println("Não há como fugir de um inimigo tão poderoso!");
                 } else {
-                    System.out.println("A fuga falhou!");
+                    int rolagemFuga = rolarDado(10); 
+                    System.out.println("Você rolou " + rolagemFuga + " para fugir...");
+                    if (rolagemFuga > 5) { 
+                        System.out.println("Você conseguiu fugir!");
+                        break; 
+                    } else {
+                        System.out.println("A fuga falhou!");
+                    }
                 }
             } else {
                 System.out.println("Ação inválida, você perdeu o turno.");
@@ -335,9 +465,9 @@ public class Jogo {
         if (jogador.estaVivo() && !inimigo.estaVivo()) {
             System.out.println("Você venceu a batalha!");
             
-            // --- LÓGICA DE XP ---
             int xpGanhos = inimigo.getXpRecompensa();
             jogador.ganharXp(xpGanhos);
+            monstrosDerrotadosNaArea++;
 
             jogador.pegarLoot(inimigo);
             
@@ -345,27 +475,56 @@ public class Jogo {
             if (inimigo.getNome().equals("Goblin Faminto") && localizacaoAtual == 0) {
                 System.out.println("\n[HISTÓRIA] Ao saquear o Goblin, você encontra um pedaço de tecido com o brasão do seu grupo!");
                 System.out.println("[HISTÓRIA] Você agora vê uma trilha de pegadas que antes estava escondida!");
-                localizacaoAtual = 1; // Avança para a Trilha
+                localizacaoAtual = 1; 
+                monstrosDerrotadosNaArea = 0;
             }
             if (inimigo.getNome().equals("Troll da Caverna") && localizacaoAtual == 1) {
                 System.out.println("\n[HISTÓRIA] Em meio aos tesouros nojentos do Troll, você acha a fivela do cinto do seu capitão!");
                 System.out.println("[HISTÓRIA] A trilha leva a antigas ruínas.");
-                localizacaoAtual = 2; // Avança para as Ruínas
+                localizacaoAtual = 2; 
+                monstrosDerrotadosNaArea = 0;
+            }
+            if (inimigo.getNome().equals("Guardião de Pedra") && localizacaoAtual == 2) {
+                System.out.println("\n[HISTÓRIA] Com a derrota do Guardião, a runa em sua mão brilha intensamente.");
+                System.out.println("[HISTÓRIA] Ela aponta para o Coração da Floresta... você sente uma presença familiar e sombria lá.");
+                localizacaoAtual = 3; 
+                monstrosDerrotadosNaArea = 0;
             }
             if (inimigo.getNome().equals("Espírito Corrompido da Floresta") && localizacaoAtual == 3) {
                 System.out.println("\n[HISTÓRIA] Com a derrota da criatura, Elara está livre, mas exausta.");
                 System.out.println("[HISTÓRIA] 'O resto do grupo... eles foram para o Santuário Antigo... Cuidado. O rugido... o rugido que nos atacou... está lá.'");
-                localizacaoAtual = 4; // Avança para o Santuário
-            }
-            if (inimigo.getNome().equals("A Besta Manticora")) {
-                System.out.println("\n\n--- FIM DA JORNADA ---");
-                System.out.println("Com a Manticora morta, um silêncio cai sobre Ervaluna.");
-                System.out.println("Você sobreviveu. Você vingou seu grupo. Mas a floresta... ela ainda te observa.");
-                System.out.println("...Obrigado por jogar...");
-                jogoAtivo = false; // Termina o jogo
+                localizacaoAtual = 4; 
+                monstrosDerrotadosNaArea = 0;
             }
             
-            // Só salva se o jogo não tiver terminado
+            // --- FIM DO JOGO (NORMAL) ---
+            if (inimigo.getNome().equals("A Besta Manticora")) {
+                System.out.println("\n\n--- FIM DA HISTÓRIA PRINCIPAL ---");
+                System.out.println("Com a Manticora morta, um silêncio cai sobre Ervaluna.");
+                System.out.println("Você sobreviveu. Você vingou seu grupo.");
+                
+                System.out.println("\nO que você deseja fazer?");
+                System.out.println("[1] Encerrar a jornada (Fim de Jogo)");
+                System.out.println("[2] Continuar explorando a Floresta Interminável");
+                System.out.print("Sua escolha: ");
+                String escolhaFinal = scanner.nextLine();
+                
+                if (escolhaFinal.equals("1")) {
+                    System.out.println("...Obrigado por jogar...");
+                    jogoAtivo = false; // Termina o jogo
+                } else {
+                    System.out.println("\nA floresta ainda te chama... A exploração agora é infinita.");
+                    localizacaoAtual = 5; // Move para o "Andar Infinito"
+                    monstrosDerrotadosNaArea = 0;
+                }
+
+            } 
+            // --- CHEFE SECRETO (NÃO TERMINA O JOGO) ---
+            else if (inimigo.getNome().equals("Ser Caótico de Ervaluna")) {
+                System.out.println("\n[VITÓRIA ÉPICA] Você baniu o Ser Caótico... por enquanto.");
+                serCaoticoDerrotas++; // Incrementa o contador para a próxima vez
+            }
+            
             if(jogoAtivo) {
                 criarSavePoint(); 
             }
@@ -382,7 +541,7 @@ public class Jogo {
         }
         
         System.out.println("Qual item você quer usar?");
-        jogador.mostrarInventario(); // Agora mostra a lista numerada
+        jogador.mostrarInventario(); 
         System.out.print("Digite o NÚMERO do item (ou 0 para cancelar): ");
         
         try {
@@ -396,7 +555,12 @@ public class Jogo {
             Item item = jogador.getInventario().getItemPorIndice(numeroEscolhido - 1);
             
             if (item != null) {
-                jogador.usarItem(item.getNome());
+                String efeito = jogador.usarItem(item.getNome());
+                
+                if (efeito.equals("mapa")) {
+                    mostrarMiniMapa(localizacaoAtual);
+                }
+                
             } else {
                 System.out.println("Número de item inválido.");
             }
@@ -409,7 +573,6 @@ public class Jogo {
     // --- Lógica de Save/Load com Construtor de Cópia ---
     
     private static void criarSavePoint() {
-        // "Progresso salvo!" REMOVIDO
         if (jogador instanceof Guerreiro g) {
             savePoint = new Guerreiro(g);
         } else if (jogador instanceof Mago m) {
@@ -444,5 +607,100 @@ public class Jogo {
     private static int rolarDado(int lados) {
         return dado.nextInt(lados) + 1;
     }
-}
     
+    
+    // --- MÉTODO DO MAPA ---
+    
+    /**
+     * Mostra o mini-mapa ASCII que você criou, de forma dinâmica.
+     * @param localizacao O ID da localização atual (0-5)
+     */
+    private static void mostrarMiniMapa(int localizacao) {
+        // Define as marcações do mapa
+        String loc0, loc1, loc2, loc3, loc4;
+        loc0 = loc1 = loc2 = loc3 = loc4 = "[?]"; // Padrão 'Oculto'
+
+        switch (localizacao) {
+            case 0: // Acloreira
+                loc0 = "[P]";
+                loc1 = "[ ]"; 
+                break;
+            case 1: // Trilha
+                loc0 = "[X]";
+                loc1 = "[P]";
+                loc2 = "[ ]"; 
+                break;
+            case 2: // Ruinas
+                loc0 = "[X]";
+                loc1 = "[X]";
+                loc2 = "[P]";
+                loc3 = "[ ]"; 
+                break;
+            case 3: // Coracao
+                loc0 = "[X]";
+                loc1 = "[X]";
+                loc2 = "[X]";
+                loc3 = "[P]";
+                loc4 = "[ ]"; 
+                break;
+            case 4: // Santuario
+                loc0 = "[X]";
+                loc1 = "[X]";
+                loc2 = "[X]";
+                loc3 = "[X]";
+                loc4 = "[P]";
+                break;
+            case 5: // Floresta Interminável
+                loc0 = "[X]";
+                loc1 = "[X]";
+                loc2 = "[X]";
+                loc3 = "[X]";
+                loc4 = "[X]";
+                break;
+        }
+
+ 
+        System.out.println("\n==================== MAPA DA FLORESTA DE ERVALUNA ====================");
+
+        System.out.println("^^^^^^^^^^^^^^^^^^^^ MONTANHAS DO NORTE (INACESSÍVEIS) ^^^^^^^^^^^^^^^^^^^");
+
+        System.out.println("T T & ^ ^ ^ ^           ^ ^ ^ ^ ^           ^ ^ & T T & ^T T T T T T");
+
+        System.out.println("   & T ^         ^     " + loc4 + "  Santuário Antigo (Chefe Final)^ & T");
+
+        System.out.println("T & ^ ^                /         \\            ^ ^   & T & T T T T");
+
+        System.out.println("T T & ^               /           \\           ^ T T T T T T T T T");
+
+        System.out.println("& T ^           " + loc3 + "  Coração da Floresta (Chefe 1)   ^ ^ T T");
+
+        System.out.println("T & ^ ^            (Energia Mística) \\            ^ T T T T T T T");
+
+        System.out.println("& & T ^                               \\            ^ T T T T T T T");
+
+        System.out.println("T T ^     " + loc2 + "  Ruínas Antigas (Desafio)          T T ^ & T &");
+
+        System.out.println("& T ^            /                      \\            ^ T T T T T T");
+
+        System.out.println("T ^           /                          \\         ^ & T T T T T T");	
+
+        System.out.println("& ^    " + loc1 + "  Trilha das Bestas (Selvagem)  \\           ^ T T &");
+
+        System.out.println("T ^         /                              \\        ^ & T T T T T ");
+
+        System.out.println("& ^        /                                \\           ^ T & T T T");
+
+        System.out.println("T &       /                                  \\             & T T T");
+
+        System.out.println("& T      /    " + loc0 + "  Clareira Inicial (Partida)   & T & TT T T T");
+
+        System.out.println("T & T & T & & T T T & & T & T T T & T & & T T & & T T T & T T TT T");
+
+        System.out.println("===========================================================================");
+
+        System.out.println("[P] = Você   [X] = Concluído   [ ] = Revelado   [?] = Oculto");
+
+        System.out.println("T = Árvore | ^ = Montanha | & = Rocha | \\ = Caminhos\n");
+
+    }
+}

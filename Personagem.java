@@ -13,7 +13,6 @@ public abstract class Personagem {
     protected int nivel;
     protected Inventario inventario;
     
-    // --- NOVOS ATRIBUTOS DE XP ---
     protected int xp;
     protected int xpParaProximoNivel;
 
@@ -47,7 +46,6 @@ public abstract class Personagem {
 
     /**
      * Construtor de Cópia (requisito).
-     * ATUALIZADO: agora copia os atributos de XP.
      */
     public Personagem(Personagem original) {
         this.nome = original.nome;
@@ -63,22 +61,15 @@ public abstract class Personagem {
 
     // --- MÉTODOS DE XP E NÍVEL ---
 
-    /**
-     * Concede XP ao jogador e verifica se ele subiu de nível.
-     */
     public void ganharXp(int xpGanhos) {
         this.xp += xpGanhos;
         System.out.println(this.nome + " ganhou " + xpGanhos + " de XP! (Total: " + this.xp + "/" + this.xpParaProximoNivel + ")");
         
-        // Usa 'while' caso o jogador ganhe XP suficiente para vários níveis
         while (this.xp >= this.xpParaProximoNivel) {
             subirDeNivel();
         }
     }
 
-    /**
-     * Lógica para subir de nível.
-     */
     private void subirDeNivel() {
         System.out.println("----------------------------------------");
         System.out.println("    ¡¡¡ LEVEL UP !!!");
@@ -87,13 +78,10 @@ public abstract class Personagem {
         int xpExcedente = this.xp - this.xpParaProximoNivel;
         this.nivel++;
         this.xp = xpExcedente;
-        // Fórmula simples de scaling: próximo nível custa 50% a mais
         this.xpParaProximoNivel = (int) (this.xpParaProximoNivel * 1.5);
 
-        // Aplica os bônus de status (cada classe faz de um jeito)
         aplicarBonusDeNivel();
         
-        // Cura total ao subir de nível
         this.pontosVida = this.pontosVidaMax;
 
         System.out.println("Novos Atributos:");
@@ -102,16 +90,10 @@ public abstract class Personagem {
         System.out.println("----------------------------------------");
     }
 
-    /**
-     * Método abstrato. Força as subclasses (Guerreiro, Mago)
-     * a definir como seus status aumentam.
-     */
     public abstract void aplicarBonusDeNivel();
 
+    // --- Métodos de Combate e Ações ---
 
-    // --- Métodos de Combate e Ações (Atualizados) ---
-
-    // Calcula o ataque (dado + atributo)
     public int calcularAtaque(int rolagemDado) {
         return this.ataque + rolagemDado;
     }
@@ -142,26 +124,50 @@ public abstract class Personagem {
 
     // --- Métodos de Inventário ---
     
-    public void usarItem(String nomeDoItem) {
+    /**
+     * --- MÉTODO ATUALIZADO ---
+     * Agora reconhece os novos tipos de item do seu "Bestiário".
+     */
+    public String usarItem(String nomeDoItem) {
         Item item = this.inventario.encontrarItem(nomeDoItem);
-        if (item != null && item.getQuantidade() > 0) {
-            if (item.getEfeito().equals("cura")) {
-                curar(20); 
-                item.usar(); 
-            } else if (item.getEfeito().equals("cura_grande")) {
-                curar(50); 
-                item.usar();
-            } else if (item.getEfeito().equals("clue")) {
-                System.out.println("\n[INSPECIONAR PISTA]");
+        
+        if (item == null) {
+            return "falha_nao_tem";
+        }
+        
+        if (item.getQuantidade() <= 0) {
+            return "falha_sem_qtd";
+        }
+
+        String efeito = item.getEfeito();
+
+        switch (efeito) {
+            case "cura":
+                curar(20);
+                item.usar(); // Decrementa a quantidade
+                return "cura";
+            case "cura_grande":
+                curar(50);
+                item.usar(); // Decrementa a quantidade
+                return "cura_grande";
+            
+            // --- Casos não-consumíveis ---
+            case "mapa":
+                System.out.println("Você consulta o " + item.getNome() + "...");
+                return "mapa";
+            case "clue":
+            case "material":
+            case "equipamento":
+            case "artefato":
+            case "lixo":
+                System.out.println("\n[INSPECIONAR ITEM]");
                 System.out.println(item.getNome() + ": " + item.getDescricao());
-                System.out.println("Isso não pode ser 'usado', mas é vital para sua jornada.");
-            } else {
+                System.out.println("(Não é possível 'usar' este item agora.)");
+                return "clue"; // Reutiliza o efeito "clue" para não fazer nada
+            
+            default:
                 System.out.println("Não é possível usar '" + item.getNome() + "' agora.");
-            }
-        } else if (item != null && item.getQuantidade() <= 0) {
-            System.out.println("Você não tem mais '" + nomeDoItem + "'.");
-        } else {
-            System.out.println("Você não possui o item '" + nomeDoItem + "'.");
+                return "falha_usar";
         }
     }
     
@@ -171,7 +177,7 @@ public abstract class Personagem {
     
     public void pegarLoot(Personagem inimigo) {
         System.out.println("\nVocê saqueia o " + inimigo.getNome() + "...");
-        Inventario loot = inimigo.getInventario().clone(); // Clona o inventário
+        Inventario loot = inimigo.getInventario().clone(); 
 
         if (loot.getItens().isEmpty()) {
             System.out.println("...não havia nada de valor.");
@@ -184,7 +190,7 @@ public abstract class Personagem {
         }
     }
 
-    // --- Métodos Obrigatórios de POO (toString atualizado) ---
+    // --- Métodos Obrigatórios de POO ---
 
     @Override
     public String toString() {
