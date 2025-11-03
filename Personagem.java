@@ -13,17 +13,8 @@ public abstract class Personagem {
     protected int xp;
     protected int xpParaProximoNivel;
 
-  
     public Personagem() {
-        this.nome = "Ninguém";
-        this.pontosVidaMax = 10;
-        this.pontosVida = 10;
-        this.ataque = 1;
-        this.defesa = 1;
-        this.nivel = 1;
-        this.inventario = new Inventario();
-        this.xp = 0;
-        this.xpParaProximoNivel = 100; // XP inicial para Nível 2
+        this("Ninguém", 10, 1, 1); 
     }
 
     public Personagem(String nome, int hp, int atk, int def) {
@@ -38,7 +29,6 @@ public abstract class Personagem {
         this.xpParaProximoNivel = 100;
     }
 
-   
     public Personagem(Personagem original) {
         this.nome = original.nome;
         this.pontosVidaMax = original.pontosVidaMax;
@@ -50,7 +40,6 @@ public abstract class Personagem {
         this.xp = original.xp;
         this.xpParaProximoNivel = original.xpParaProximoNivel;
     }
-
 
     public void ganharXp(int xpGanhos) {
         this.xp += xpGanhos;
@@ -83,8 +72,6 @@ public abstract class Personagem {
 
     public abstract void aplicarBonusDeNivel();
 
-    
-
     public int calcularAtaque(int rolagemDado) {
         return this.ataque + rolagemDado;
     }
@@ -112,7 +99,6 @@ public abstract class Personagem {
     public boolean estaVivo() {
         return this.pontosVida > 0;
     }
-
 
     public String usarItem(String nomeDoItem) {
         Item item = this.inventario.encontrarItem(nomeDoItem);
@@ -148,7 +134,7 @@ public abstract class Personagem {
                 System.out.println("\n[INSPECIONAR ITEM]");
                 System.out.println(item.getNome() + ": " + item.getDescricao());
                 System.out.println("(Não é possível 'usar' este item agora.)");
-                return "clue"; // Reutiliza o efeito "clue" para não fazer nada
+                return "clue"; 
             
             default:
                 System.out.println("Não é possível usar '" + item.getNome() + "' agora.");

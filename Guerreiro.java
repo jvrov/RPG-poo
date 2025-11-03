@@ -1,13 +1,7 @@
 public class Guerreiro extends Personagem {
 
-  
     public Guerreiro() {
-        super(); // Chama o construtor padrão do Pai
-        this.nome = "Guerreiro Padrão";
-        this.pontosVidaMax = 120;
-        this.pontosVida = 120;
-        this.ataque = 12;
-        this.defesa = 8;
+        this("Guerreiro Padrão");
     }
     
     public Guerreiro(String nome) {
@@ -18,10 +12,11 @@ public class Guerreiro extends Personagem {
     public Guerreiro(Guerreiro original) {
         super(original); 
     }
+    
     @Override
     public void aplicarBonusDeNivel() {
         this.pontosVidaMax += 20;
         this.ataque += 2;
-        this.defesa += 2;
+        this.defesa += 3;
     }
 }
