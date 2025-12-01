@@ -5,6 +5,11 @@ public abstract class Personagem {
     protected String nome;
     protected int pontosVida;
     protected int pontosVidaMax; 
+    
+    // --- NOVO: SISTEMA DE MANA ---
+    protected int mp;
+    protected int mpMax;
+    
     protected int ataque;
     protected int defesa;
     protected int nivel;
@@ -14,15 +19,20 @@ public abstract class Personagem {
     protected int xpParaProximoNivel;
 
     public Personagem() {
-        this("Ninguém", 10, 1, 1); 
+        this("Ninguém", 10, 1, 1, 10); // 10 MP padrão
     }
 
-    public Personagem(String nome, int hp, int atk, int def) {
+    // Construtor principal ATUALIZADO com MP
+    public Personagem(String nome, int hp, int atk, int def, int mp) {
         this.nome = nome;
         this.pontosVidaMax = hp;
         this.pontosVida = hp;
         this.ataque = atk;
         this.defesa = def;
+        
+        this.mpMax = mp; // Define MP Máximo
+        this.mp = mp;    // Começa com MP cheio
+        
         this.nivel = 1;
         this.inventario = new Inventario();
         this.xp = 0;
@@ -39,8 +49,32 @@ public abstract class Personagem {
         this.inventario = original.inventario.clone(); 
         this.xp = original.xp;
         this.xpParaProximoNivel = original.xpParaProximoNivel;
+        
+        this.mp = original.mp;       // Copia MP
+        this.mpMax = original.mpMax; // Copia MP Max
     }
 
+    // --- NOVO MÉTODO ABSTRATO ---
+    // Retorna true se a habilidade foi usada com sucesso, false se falhou (sem mana)
+    public abstract boolean usarHabilidadeEspecial(Personagem alvo);
+
+    // --- MÉTODOS DE MANA ---
+    public boolean gastarMp(int custo) {
+        if (this.mp >= custo) {
+            this.mp -= custo;
+            return true;
+        }
+        System.out.println(">>> MP Insuficiente! (Precisa de " + custo + ", tem " + this.mp + ")");
+        return false;
+    }
+    
+    public void recuperarMp(int quantidade) {
+        this.mp += quantidade;
+        if (this.mp > this.mpMax) this.mp = this.mpMax;
+    }
+
+    // --- RESTO DO CÓDIGO (XP, DANO, ETC) CONTINUA IGUAL ---
+    
     public void ganharXp(int xpGanhos) {
         this.xp += xpGanhos;
         System.out.println(this.nome + " ganhou " + xpGanhos + " de XP! (Total: " + this.xp + "/" + this.xpParaProximoNivel + ")");
@@ -63,6 +97,7 @@ public abstract class Personagem {
         aplicarBonusDeNivel();
         
         this.pontosVida = this.pontosVidaMax;
+        this.mp = this.mpMax; // Recupera MP ao subir de nível
 
         System.out.println("Novos Atributos:");
         System.out.println(this.toString());
@@ -75,9 +110,13 @@ public abstract class Personagem {
     public int calcularAtaque(int rolagemDado) {
         return this.ataque + rolagemDado;
     }
+    
+    public int calcularDano(java.util.Random dado) {
+        return this.ataque + dado.nextInt(4) + 1;
+    }
 
     public void receberDano(int dano) {
-        int danoRecebido = Math.max(0, dano - this.defesa);
+        int danoRecebido = Math.max(0, dano); 
         this.pontosVida -= danoRecebido;
         System.out.printf("%s recebeu %d de dano! (HP: %d/%d)\n", 
             this.nome, danoRecebido, this.pontosVida, this.pontosVidaMax);
@@ -103,13 +142,8 @@ public abstract class Personagem {
     public String usarItem(String nomeDoItem) {
         Item item = this.inventario.encontrarItem(nomeDoItem);
         
-        if (item == null) {
-            return "falha_nao_tem";
-        }
-        
-        if (item.getQuantidade() <= 0) {
-            return "falha_sem_qtd";
-        }
+        if (item == null) return "falha_nao_tem";
+        if (item.getQuantidade() <= 0) return "falha_sem_qtd";
 
         String efeito = item.getEfeito();
 
@@ -122,7 +156,6 @@ public abstract class Personagem {
                 curar(50);
                 item.usar(); 
                 return "cura_grande";
-            
             case "mapa":
                 System.out.println("Você consulta o " + item.getNome() + "...");
                 return "mapa";
@@ -135,7 +168,6 @@ public abstract class Personagem {
                 System.out.println(item.getNome() + ": " + item.getDescricao());
                 System.out.println("(Não é possível 'usar' este item agora.)");
                 return "clue"; 
-            
             default:
                 System.out.println("Não é possível usar '" + item.getNome() + "' agora.");
                 return "falha_usar";
@@ -163,8 +195,9 @@ public abstract class Personagem {
 
     @Override
     public String toString() {
-        return String.format("[%s] (Nvl %d) HP: %d/%d, ATK: %d, DEF: %d, XP: %d/%d",
-            this.nome, this.nivel, this.pontosVida, this.pontosVidaMax, this.ataque, this.defesa, this.xp, this.xpParaProximoNivel);
+        // TO STRING ATUALIZADO COM MP
+        return String.format("[%s] (Nvl %d) HP: %d/%d, MP: %d/%d, ATK: %d, DEF: %d, XP: %d/%d",
+            this.nome, this.nivel, this.pontosVida, this.pontosVidaMax, this.mp, this.mpMax, this.ataque, this.defesa, this.xp, this.xpParaProximoNivel);
     }
     
     @Override
@@ -183,4 +216,5 @@ public abstract class Personagem {
     public String getNome() { return nome; }
     public int getDefesa() { return defesa; }
     public Inventario getInventario() { return inventario; }
+    public int getAtaque() { return ataque; }
 }

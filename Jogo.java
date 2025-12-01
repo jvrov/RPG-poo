@@ -49,6 +49,7 @@ public class Jogo {
         };
         
         jogador.getInventario().adicionarItem(new Item("Poção de Cura", "Cura 20 HP", "cura", 2));
+        jogador.getInventario().adicionarItem(new Item("Poção de Mana", "Recupera 20 MP", "mana", 1)); // Item novo!
         jogador.getInventario().adicionarItem(new Item("Mapa da Floresta", "Um mapa parcial de Ervaluna.", "mapa", 1)); 
         
         System.out.println("\nPersonagem criado!");
@@ -364,21 +365,28 @@ public class Jogo {
         while (jogador.estaVivo() && inimigo.estaVivo() && jogoAtivo) { 
             System.out.println(jogador.toString());
             System.out.println(inimigo.toString());
-            System.out.println("\nTurno do Jogador: [1] Atacar [2] Usar Item [3] Tentar Fugir");
-            String acao = scanner.nextLine();
             
+            // MENU ATUALIZADO
+            System.out.println("\nTurno do Jogador:");
+            System.out.println("[1] Atacar (Físico)");
+            System.out.println("[2] Usar Item");
+            System.out.println("[3] Habilidade Especial (Gasta MP)");
+            System.out.println("[4] Tentar Fugir");
+            
+            String acao = scanner.nextLine();
             boolean turnoInimigo = true;
             
             if (acao.equals("1")) {
                 int rolagem = rolarDado(20); 
                 System.out.println("Você rolou um " + rolagem);
-                int ataqueTotal = jogador.calcularAtaque(rolagem); 
+                int rolagemAcerto = jogador.calcularAtaque(rolagem); 
                 
-                if (ataqueTotal > inimigo.getDefesa()) { 
+                if (rolagemAcerto > inimigo.getDefesa()) { 
                     System.out.println("Acerto!");
-                    inimigo.receberDano(ataqueTotal);
+                    int dano = jogador.calcularDano(dado); // CRÍTICO FUNCIONA AQUI
+                    inimigo.receberDano(dano);
                 } else {
-                    System.out.println("Você errou! O ataque ( " + ataqueTotal + " ) não superou a defesa ( " + inimigo.getDefesa() + " ).");
+                    System.out.println("Você errou! O ataque ( " + rolagemAcerto + " ) não superou a defesa ( " + inimigo.getDefesa() + " ).");
                 }
                 
             } else if (acao.equals("2")) {
@@ -386,6 +394,14 @@ public class Jogo {
                 turnoInimigo = false; 
                 
             } else if (acao.equals("3")) {
+                // OPÇÃO DE HABILIDADE ESPECIAL
+                boolean usou = jogador.usarHabilidadeEspecial(inimigo);
+                if (!usou) {
+                    turnoInimigo = false; // Se falhou (sem MP), não passa o turno
+                    System.out.println("Escolha outra ação.");
+                }
+
+            } else if (acao.equals("4")) {
                 if(inimigo.getXpRecompensa() >= 120) { 
                     System.out.println("Não há como fugir de um inimigo tão poderoso!");
                 } else {
@@ -402,14 +418,16 @@ public class Jogo {
                 System.out.println("Ação inválida, você perdeu o turno.");
             }
             
+            // Turno do Inimigo
             if (inimigo.estaVivo() && turnoInimigo) {
                 System.out.println("Turno do " + inimigo.getNome() + "...");
                 int rolagem = rolarDado(20); 
-                int ataqueTotal = inimigo.calcularAtaque(rolagem); 
+                int rolagemAcerto = inimigo.calcularAtaque(rolagem); 
                 
-                if (ataqueTotal > jogador.getDefesa()) { 
+                if (rolagemAcerto > jogador.getDefesa()) { 
                     System.out.println("O inimigo acertou!");
-                    jogador.receberDano(ataqueTotal);
+                    int dano = inimigo.calcularDano(dado); // CRÍTICO FUNCIONA AQUI
+                    jogador.receberDano(dano); // ESQUIVA FUNCIONA AQUI
                 } else {
                     System.out.println("O inimigo errou!");
                 }
@@ -418,6 +436,10 @@ public class Jogo {
         
         if (jogador.estaVivo() && !inimigo.estaVivo()) {
             System.out.println("Você venceu a batalha!");
+            
+            // RECUPERA MP APÓS BATALHA
+            System.out.println("Você recupera um pouco de energia (5 MP).");
+            jogador.recuperarMp(5);
             
             int xpGanhos = inimigo.getXpRecompensa();
             jogador.ganharXp(xpGanhos);
@@ -623,7 +645,7 @@ public class Jogo {
 
         System.out.println("& T ^            /                      \\            ^ T T T T T T");
 
-        System.out.println("T ^           /                          \\         ^ & T T T T T T");	
+        System.out.println("T ^           /                          \\         ^ & T T T T T T");  
 
         System.out.println("& ^    " + loc1 + "  Trilha das Bestas (Selvagem)  \\           ^ T T &");
 

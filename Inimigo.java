@@ -1,11 +1,15 @@
 import java.util.Objects;
 
-
+/**
+ * Classe Inimigo
+ * Derivada de Personagem e funciona como uma "fábrica" de monstros.
+ * Cada inimigo é criado via método estático criarInimigo().
+ */
 public class Inimigo extends Personagem {
 
     private int xpRecompensa;
 
-
+    // Construtor Padrão (usado como fallback)
     private Inimigo() {
         super();
         this.nome = "Rato";
@@ -16,26 +20,29 @@ public class Inimigo extends Personagem {
         this.xpRecompensa = 5;
     }
 
-
+    // Construtor principal
+    // Nota: Passamos 0 de MP para inimigos no construtor da classe Pai
     private Inimigo(String nome, int hp, int atk, int def, int xp) {
-        super(nome, hp, atk, def);
+        super(nome, hp, atk, def, 0); // MP = 0
         this.xpRecompensa = xp;
     }
 
-
+    // Construtor de cópia (para save/load)
     private Inimigo(Inimigo original) {
         super(original);
         this.xpRecompensa = original.xpRecompensa;
     }
 
- 
+    // ==========================================================
+    // MÉTODO FÁBRICA DE INIMIGOS
+    // ==========================================================
     public static Inimigo criarInimigo(String nomeDoInimigo) {
         Inimigo inimigo;
 
         switch (nomeDoInimigo) {
 
             // --------------------------------------------------
-            // INIMIGOS BÁSICOS DA FLORESTA
+            // 🌿 INIMIGOS BÁSICOS DA FLORESTA
             // --------------------------------------------------
             case "Slime":
                 inimigo = new Inimigo("Slime", 20, 6, 2, 10);
@@ -63,7 +70,7 @@ public class Inimigo extends Personagem {
                 break;
 
             // --------------------------------------------------
-            // INIMIGOS DAS RUÍNAS E CAVERNAS
+            // 🪨 INIMIGOS DAS RUÍNAS E CAVERNAS
             // --------------------------------------------------
             case "Ogro da Montanha":
                 inimigo = new Inimigo("Ogro da Montanha", 100, 14, 8, 100);
@@ -86,7 +93,7 @@ public class Inimigo extends Personagem {
                 break;
 
             // --------------------------------------------------
-            //  INIMIGOS ESPIRITUAIS 
+            // 💀 INIMIGOS ESPIRITUAIS / CORROMPIDOS
             // --------------------------------------------------
             case "Espectro Errante":
                 inimigo = new Inimigo("Espectro Errante", 45, 13, 3, 40);
@@ -104,7 +111,7 @@ public class Inimigo extends Personagem {
                 break;
 
             // --------------------------------------------------
-            //  CHEFES 
+            // 🐺 CHEFES INTERMEDIÁRIOS E AVANÇADOS
             // --------------------------------------------------
             case "Alfa Lupino":
                 inimigo = new Inimigo("Alfa Lupino", 120, 17, 10, 180);
@@ -118,7 +125,7 @@ public class Inimigo extends Personagem {
                 break;
 
             // --------------------------------------------------
-            // CHEFES FINAIS 
+            // 🐉 CHEFES FINAIS / SECRETOS
             // --------------------------------------------------
             case "Dragão Vermelho Jovem":
                 inimigo = new Inimigo("Dragão Vermelho Jovem", 160, 16, 12, 300);
@@ -136,27 +143,35 @@ public class Inimigo extends Personagem {
                 break;
 
             default:
-                inimigo = new Inimigo(); 
+                inimigo = new Inimigo(); // Usa o inimigo padrão "Rato"
                 break;
         }
 
         return inimigo;
     }
 
-   
+    // ==========================================================
+    // MÉTODOS AUXILIARES
+    // ==========================================================
     public int getXpRecompensa() {
         return this.xpRecompensa;
     }
     
-   
-    /**
-     * upa o caos
-     */
     public void setXpRecompensa(int xp) {
         this.xpRecompensa = xp;
     }
 
+    // Métodos abstratos herdados de Personagem que o Inimigo não usa de verdade
+    
     @Override
     public void aplicarBonusDeNivel() {
+        // Inimigos não sobem de nível
+    }
+
+    @Override
+    public boolean usarHabilidadeEspecial(Personagem alvo) {
+        // Inimigos usam apenas ataque básico por enquanto
+        System.out.println(this.nome + " prepara um ataque feroz!");
+        return false;
     }
 }
